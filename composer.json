@@ -1,0 +1,40 @@
+{
+    "name": "azenned/smc",
+    "description": "Blueflame cache library using shared memory (SHM)",
+    "version": "1.0.0",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "ZENNED Abderrazak",
+            "homepage": "https://github.com/azenned/"
+        }
+    ],
+    "require": {
+        "php": ">=7.3",
+        "ext-sysvmsg": "*",
+        "ext-sysvsem": "*",
+        "ext-sysvshm": "*",
+        "composer-plugin-api": "^1.0 || ^2.0"
+    },
+    "config": {
+        "apcu-autoloader": false
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^8.0 || ^9.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Blueflame\\": "src/"
+        }
+    },
+    "type": "composer-plugin",
+    "extra": {
+        "class": "Blueflame\\Composer\\PluginConfiguration",
+        "smc-debug": false,
+        "smc-enable-apcu": true,
+        "smc-enable-services": false
+    },
+    "scripts": {
+        "pre-autoload-dump": "Blueflame\\Composer\\PluginConfiguration::onPreAutoloadDump"
+    }
+}

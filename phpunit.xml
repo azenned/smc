@@ -1,0 +1,20 @@
+<phpunit
+        bootstrap="tests/bootstrap.php"
+        backupGlobals="false"
+        colors="true"
+		convertWarningsToExceptions="true"
+		convertNoticesToExceptions="true"
+        convertErrorsToExceptions="true">
+    <php>
+        <ini name="assert.active" value="1"/>
+        <ini name="assert.bail" value="0"/>
+        <ini name="assert.exception" value="On"/>
+        <const name="SHMCACHE_VALIDATE_LOCK_RULES" value="1"/>
+    </php>
+    <testsuites>
+        <testsuite name="SMC">
+            <directory suffix="Test.php">tests/src/Blueflame/Cache/</directory>
+        </testsuite>
+    </testsuites>
+</phpunit>
+
