@@ -24,8 +24,6 @@ if (function_exists('shm_attach')
   if (is_null(APCuSHM::getInstance())) {
     return;
   }
-  ini_set('apc.enabled', TRUE);
-  ini_set('apc.enable_cli', TRUE);
   define('APC_ITER_ALL', -1);
   define('APC_ITER_ATIME', 2048);
   define('APC_ITER_CTIME', 512);
@@ -51,6 +49,7 @@ if (function_exists('shm_attach')
     public function __construct($search = NULL, $format = APC_ITER_ALL, $chunk_size = 100, $list = APC_LIST_ACTIVE) {
       parent::__construct($search, $format, $chunk_size, $list);
     }
+
   }
 
   function apcu_add($key, $value = NULL, $ttl = 0) {
