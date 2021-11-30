@@ -8,7 +8,6 @@ use Composer\Config;
 use Composer\EventDispatcher\EventDispatcher;
 use Composer\Installer\InstallationManager;
 use Composer\IO\IOInterface;
-use Composer\Package\PackageInterface;
 use Composer\Repository\InstalledRepositoryInterface;
 use Composer\Util\Filesystem;
 
@@ -22,7 +21,7 @@ final class  CustomAutoloadGenerator extends AutoloadGenerator {
     $this->composer = $composer;
   }
 
-  public function dump(Config $config, InstalledRepositoryInterface $localRepo, PackageInterface $mainPackage, InstallationManager $installationManager, $targetDir, $scanPsrPackages = FALSE, $suffix = '') {
+  public function dump(Config $config, InstalledRepositoryInterface $localRepo, $mainPackage, InstallationManager $installationManager, $targetDir, $scanPsrPackages = FALSE, $suffix = '') {
     $count = parent::dump($config, $localRepo, $mainPackage, $installationManager, $targetDir, $scanPsrPackages, $suffix);
     // Override composer default ClassLoader.php
     $filesystem = new Filesystem();
