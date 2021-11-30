@@ -53,10 +53,9 @@ class SHMStorage {
     // Allocated Shared Memory , 128Mb by default
     $this->size = intval($maxsize ?? 128) * 1024 * 1024;
     $parts = [__DIR__, 'cache.shm', $this->bin];
-
+    $parts[] = posix_getuid();
+    $parts[] = posix_getgid();
     if ($byinstance) {
-      $parts[] = posix_getuid();
-      $parts[] = posix_getgid();
       $parts[] = $this->bin .= self::$counter++;
     }
     $this->file = implode('.', $parts);
@@ -86,7 +85,7 @@ class SHMStorage {
   private function __init($recreate_semaphore = TRUE) {
 
     // Attach Or Create file cache shared memory
-    $this->shm = shm_attach($this->key, $this->size, 0666);
+    $this->shm = shm_attach($this->key, $this->size);
     if (!$this->shm) {
       if (isset($GLOBALS['smc_debug'])) {
         if (php_sapi_name() == "cli") {
@@ -96,7 +95,7 @@ class SHMStorage {
       }
       throw new Exception("Unable to allocate shared memory for : " . $this->bin . ' : ' . $this->file);
     }
-    $this->IndexShm = shm_attach($this->indexShmkey, 12 * 1024 * 1024, 0666);
+    $this->IndexShm = shm_attach($this->indexShmkey, 12 * 1024 * 1024);
     if (!$this->IndexShm) {
       if (isset($GLOBALS['smc_debug'])) {
         if (php_sapi_name() == "cli") {
@@ -109,7 +108,7 @@ class SHMStorage {
     if (!$recreate_semaphore) {
       return;
     }
-    $this->semaphore = sem_get($this->key, 1, 0666, TRUE);
+    $this->semaphore = sem_get($this->key, 1);
 
     if (empty($this->semaphore)) {
       if (isset($GLOBALS['smc_debug'])) {

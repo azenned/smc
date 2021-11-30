@@ -6,6 +6,11 @@ use Blueflame\Drupal\SMCServiceProvider;
 if (!require __DIR__ . "/requirements.php") {
   return;
 }
+try {
+  APCuSHM::getInstance();
+} catch (\Exception $exception) {
+  return;
+}
 
 // Override Drupal services
 $GLOBALS['conf']['container_service_providers'][] = SMCServiceProvider::class;

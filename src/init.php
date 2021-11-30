@@ -21,7 +21,9 @@ use Blueflame\Cache\APCuSHMIterator;
  */
 if (function_exists('shm_attach')
   && !function_exists('apcu_fetch')) {
-  if (is_null(APCuSHM::getInstance())) {
+  try {
+    APCuSHM::getInstance();
+  } catch (\Exception $exception) {
     return;
   }
   define('APC_ITER_ALL', -1);
