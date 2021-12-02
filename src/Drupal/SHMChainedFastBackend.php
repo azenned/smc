@@ -21,7 +21,7 @@ class SHMChainedFastBackend extends ChainedFastBackend {
         $cids = $cids_copy;
         $items = [];
       }
-      foreach ($items as $item) {
+      foreach ($items ?? [] as $item) {
         if ($item->created < $last_write_timestamp) {
           $cids[array_search($item->cid, $cids_copy)] = $item->cid;
         }

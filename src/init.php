@@ -1,4 +1,7 @@
 <?php
+if (!defined('SMC_DEBUG')) {
+  define('SMC_DEBUG', FALSE);
+}
 
 if (extension_loaded('apc') or extension_loaded('apcu')) {
   return;

@@ -67,7 +67,7 @@ class SHMBackend implements CacheBackendInterface {
     $this->checksumProvider = $checksum_provider;
     $this->binPrefix = $this->sitePrefix . '_' . $this->bin . '_';
     try {
-      $this->store = new SHMStorage($this->bin, FALSE);
+      $this->store = new SHMStorage($this->bin, FALSE, intval($GLOBALS['smc-memsize-default'] ?? 128));
     } catch (\Exception $e) {
       unset($this->store);
     }
@@ -115,6 +115,9 @@ class SHMBackend implements CacheBackendInterface {
    * {@inheritdoc}
    */
   public function getMultiple(&$cids, $allow_invalid = FALSE) {
+    if (!isset($this->store)) {
+      return NULL;
+    }
     $map = [];
     foreach ($cids as $cid) {
       $map[$this->getKey($cid)] = $cid;

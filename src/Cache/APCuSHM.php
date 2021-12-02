@@ -11,12 +11,10 @@ final class APCuSHM extends SHMStorage {
 
 
   function __construct() {
-    if (isset($GLOBALS['smc_debug'])) {
-      if (php_sapi_name() == "cli") {
-        echo "new APCuSHM instance.\n";
-      }
+    if (SMC_DEBUG) {
+      echo "new APCuSHM instance.\n";
     }
-    parent::__construct('apcu', FALSE, 128);
+    parent::__construct('apcu', FALSE, intval($GLOBALS['smc-memsize-apcu'] ?? 128));
   }
 
   static function getInstance() {
@@ -28,10 +26,8 @@ final class APCuSHM extends SHMStorage {
   }
 
   function apcu_add($key, $value = NULL, $ttl = 0) {
-    if (isset($GLOBALS['smc_debug'])) {
-      if (php_sapi_name() == "cli") {
-        echo "apcu_add " . print_r($key, TRUE) . "\n";
-      }
+    if (SMC_DEBUG) {
+      echo "apcu_add " . print_r($key, TRUE) . "\n";
     }
     if (is_array($key)) {
       return $this->setMultiple($key, $ttl, FALSE, FALSE);
@@ -40,10 +36,8 @@ final class APCuSHM extends SHMStorage {
   }
 
   function apcu_delete($key) {
-    if (isset($GLOBALS['smc_debug'])) {
-      if (php_sapi_name() == "cli") {
-        echo "apcu_delete " . print_r($key, TRUE) . "\n";
-      }
+    if (SMC_DEBUG) {
+      echo "apcu_delete " . print_r($key, TRUE) . "\n";
     }
     if ($key instanceof APCuSHMIterator) {
       return $this->deleteMultiple((array) $key->getKeys());
@@ -67,10 +61,8 @@ final class APCuSHM extends SHMStorage {
   }
 
   function apcu_store($key, $value = NULL, $ttl = 0) {
-    if (isset($GLOBALS['smc_debug'])) {
-      if (php_sapi_name() == "cli") {
-        echo "apcu_store " . print_r($key, TRUE) . "\n";
-      }
+    if (SMC_DEBUG) {
+      echo "apcu_store " . print_r($key, TRUE) . "\n";
     }
     if (is_array($key)) {
       return $this->setMultiple($key, $ttl, TRUE, FALSE);
@@ -87,10 +79,8 @@ final class APCuSHM extends SHMStorage {
   }
 
   function apcu_clear_cache() {
-    if (isset($GLOBALS['smc_debug'])) {
-      if (php_sapi_name() == "cli") {
-        echo "apcu_clear_cache \n";
-      }
+    if (SMC_DEBUG) {
+      echo "apcu_clear_cache \n";
     }
     return $this->clear_cache();
   }
@@ -104,6 +94,6 @@ final class APCuSHM extends SHMStorage {
   }
 
   function apcu_sma_info($limited = FALSE) {
-    return $this->increment($limited);
+    return $this->getCacheInfo($limited);
   }
 }

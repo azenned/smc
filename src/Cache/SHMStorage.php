@@ -8,11 +8,15 @@ class SHMStorage {
 
   const CACHE_PERMANENT = -1;
 
-  const IndexKey = -1;
+  const IndexDeletedIDs = -2;
 
-  const stateKey = -2;
+  const IndexCounter = -1;
 
-  const TagsMapKey = -3;
+  const IndexKey = 0;
+
+  const stateKey = 1;
+
+  const TagsMapKey = 2;
 
   static $counter = 0;
 
@@ -60,11 +64,8 @@ class SHMStorage {
     }
     $this->file = implode('.', $parts);
     $this->key = $this->fake_ftok($this->file, 'data');
-    $this->indexShmkey = $this->fake_ftok($this->file, 'index');
-    if (isset($GLOBALS['smc_debug'])) {
-      if (php_sapi_name() == "cli") {
-        echo "Create shared memory for : " . $this->bin . ' : ' . $this->file . "\n";
-      }
+    if (SMC_DEBUG) {
+      echo "Create shared memory for : " . $this->bin . ' : ' . $this->file . "\n";
     }
     $this->__init();
   }
@@ -83,35 +84,21 @@ class SHMStorage {
   }
 
   private function __init($recreate_semaphore = TRUE) {
-
     // Attach Or Create file cache shared memory
-    $this->shm = shm_attach($this->key, $this->size);
+    $this->shm = @shm_attach($this->key, $this->size);
     if (!$this->shm) {
-      if (isset($GLOBALS['smc_debug'])) {
-        if (php_sapi_name() == "cli") {
-          echo "Unable to allocate shared memory for : " . $this->bin . ' : ' . $this->file . "\n";
-          return;
-        }
+      if (SMC_DEBUG) {
+        echo "Unable to allocate shared memory for : " . $this->bin . ' : ' . $this->file . "\n";
+        return;
       }
       throw new Exception("Unable to allocate shared memory for : " . $this->bin . ' : ' . $this->file);
-    }
-    $this->IndexShm = shm_attach($this->indexShmkey, 12 * 1024 * 1024);
-    if (!$this->IndexShm) {
-      if (isset($GLOBALS['smc_debug'])) {
-        if (php_sapi_name() == "cli") {
-          echo "Unable to allocate shared memory index for : " . $this->bin . ' : ' . $this->file . "\n";
-          return;
-        }
-      }
-      throw new Exception("Unable to allocate shared memory index for : " . $this->bin . ' : ' . $this->file);
     }
     if (!$recreate_semaphore) {
       return;
     }
-    $this->semaphore = sem_get($this->key, 1);
-
+    $this->semaphore = @sem_get($this->key, 1);
     if (empty($this->semaphore)) {
-      if (isset($GLOBALS['smc_debug'])) {
+      if (SMC_DEBUG) {
         if (php_sapi_name() == "cli") {
           echo "Unable to get semaphore on shared memory for : " . $this->bin . ' : ' . $this->file . "\n";
           return;
@@ -131,30 +118,33 @@ class SHMStorage {
 
   private function __checkIndex() {
 
-    if (!shm_has_var($this->IndexShm, self::stateKey)) {
+    if (!shm_has_var($this->shm, self::stateKey)) {
       // Init
       $this->currentRev = 0;
-      $this->currentIndex = [-1 => 0];
+      $this->currentIndex = [
+        self::IndexDeletedIDs => [],
+        self::IndexCounter => 3,
+      ];
       $this->currentTagsMap = [];
       $this->__saveIndex();
       return;
     }
 
-    $rev = shm_get_var($this->IndexShm, self::stateKey);
+    $rev = @shm_get_var($this->shm, self::stateKey);
     if (isset($this->currentRev)
       and $rev === $this->currentRev) {
       return;
     }
     // New index revision !!
     $this->currentRev = $rev;
-    if (shm_has_var($this->IndexShm, self::IndexKey)) {
-      $this->currentIndex = unserialize(shm_get_var($this->IndexShm, self::IndexKey));
+    if (shm_has_var($this->shm, self::IndexKey)) {
+      $this->currentIndex = @shm_get_var($this->shm, self::IndexKey);
     }
     else {
       // Currupted index !!
     }
-    if (shm_has_var($this->IndexShm, self::TagsMapKey)) {
-      $this->currentTagsMap = shm_get_var($this->IndexShm, self::TagsMapKey);
+    if (shm_has_var($this->shm, self::TagsMapKey)) {
+      $this->currentTagsMap = @shm_get_var($this->shm, self::TagsMapKey);
     }
     else {
       // Currupted index !!
@@ -165,10 +155,10 @@ class SHMStorage {
   private function __saveIndex() {
     $this->lock();
     $this->currentRev++;
-    $ret = @shm_remove_var($this->IndexShm, self::IndexKey);
-    $ret = shm_put_var($this->IndexShm, self::IndexKey, serialize($this->currentIndex));
-    shm_put_var($this->IndexShm, self::TagsMapKey, $this->currentTagsMap);
-    shm_put_var($this->IndexShm, self::stateKey, $this->currentRev);
+    $ret = @shm_remove_var($this->shm, self::IndexKey);
+    $ret = @shm_put_var($this->shm, self::IndexKey, $this->currentIndex);
+    @shm_put_var($this->shm, self::TagsMapKey, $this->currentTagsMap);
+    @shm_put_var($this->shm, self::stateKey, $this->currentRev);
     $this->unlock();
     return $ret;
   }
@@ -240,7 +230,7 @@ class SHMStorage {
   // Start HERE
 
   private function __checkMem($index) {
-    return shm_has_var($this->shm, $index);
+    return @shm_has_var($this->shm, $index);
   }
 
   private function __read($index) {
@@ -264,8 +254,9 @@ class SHMStorage {
     $this->__checkIndex();
     foreach ($keys as $key) {
       if (isset($this->currentIndex[$key])) {
-        if ($this->__checkMem($this->currentIndex[$key][1])) {
-          @shm_remove_var($this->shm, $this->currentIndex[$key][1]);
+        if ($this->__checkMem($this->currentIndex[$key][0])) {
+          $this->currentIndex[self::IndexDeletedIDs][] = $this->currentIndex[$key][0];
+          @shm_remove_var($this->shm, $this->currentIndex[$key][0]);
         }
         unset($this->currentIndex[$key]);
       }
@@ -330,20 +321,10 @@ class SHMStorage {
   }
 
   function getNextAvailableID() {
-    return $this->currentIndex[-1]++;
-    //
-    if ($this->currentIndex[-1] > count($this->currentIndex[-1] + 1)) {
-      // Some items has been deleted !!
-      $ref = range(1, $this->currentIndex[-1]);
-      $current = [];
-      foreach ($this->currentIndex as $index) {
-        $current[] = $index[0];
-      }
-      $diff = array_diff($ref, $current);
-      // return first one, ontherwise increment counter
-      return (count($diff) > 1) ? $diff[0] : $this->currentIndex[-1]++;
+    if (!empty($this->currentIndex[self::IndexDeletedIDs]) && ($idx = array_shift($this->currentIndex[self::IndexDeletedIDs]))) {
+      return $idx;
     }
-    return $this->currentIndex[-1]++;
+    return ++$this->currentIndex[self::IndexCounter];
   }
 
   private function __write($index, $value) {
@@ -362,11 +343,6 @@ class SHMStorage {
     if (!$this->shm) {
       return FALSE;
     }
-    if (isset($GLOBALS['smc_debug'])) {
-      if (php_sapi_name() == "cli") {
-        echo "Setting cache for " . $key . " in " . $this->bin . "\n";
-      }
-    }
     // This reference does not exist.
     // Create new temporary shm key
     $this->lock();
@@ -384,6 +360,10 @@ class SHMStorage {
       $permanent      // type
     ];
     $ret = $this->__write($idx, $value);
+
+    if (SMC_DEBUG) {
+      echo "Setting cache for " . $key . "(" . $idx . ") in " . $this->bin . "\n";
+    }
     $this->__saveIndex();
     $this->unlock();
     return $ret;
@@ -398,6 +378,19 @@ class SHMStorage {
       'start_time' => 99999,
       'cache_list' => [],
     ];
+
+    $this->__checkIndex();
+    foreach ($this->currentIndex as $k => $v) {
+      if ($k != -1) {
+        $infos['cache_list'][] = [
+          'info' => $k,
+          'data' => $this->__read($v[0]),
+          'inode' => $v[0],
+          'ttl' => $v[1],
+        ];
+      }
+    }
+
 
     return $infos;
   }
@@ -426,7 +419,10 @@ class SHMStorage {
       return;
     }
     $this->lock();
-    $new_storage_index = [-1 => 0];
+    $new_storage_index = [
+      self::IndexDeletedIDs => [],
+      self::IndexCounter => 3,
+    ];
 
     if (!$permanent) {
       // we create new index.
@@ -444,7 +440,7 @@ class SHMStorage {
     }
     else {
       // remove shm are reallocate new one;
-      shm_remove($this->shm);
+      @shm_remove($this->shm);
       $this->__init(FALSE);
     }
     // Write the new index then unlock
@@ -501,7 +497,8 @@ class SHMStorage {
       return FALSE;
     }
     $shm_key = $this->currentIndex[$key][0];
-    $ret_1 = shm_remove_var($this->shm, $shm_key);
+    $ret_1 = @shm_remove_var($this->shm, $shm_key);
+    $this->currentIndex[self::IndexDeletedIDs][] = $shm_key;
     unset($this->currentIndex[$key]);
     $ret_2 = $this->__saveIndex();
     $this->unlock();
@@ -544,7 +541,8 @@ class SHMStorage {
   }
 
   function __destruct() {
-    shm_detach($this->shm);
-    shm_detach($this->IndexShm);
+    if ($this->shm) {
+      @shm_detach($this->shm);
+    }
   }
 }

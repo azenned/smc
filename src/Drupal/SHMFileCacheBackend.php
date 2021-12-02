@@ -28,7 +28,7 @@ class SHMFileCacheBackend implements FileCacheBackendInterface {
       return;
     }
     try {
-      $this->store = new SHMStorage('SHMFileCacheBackend', FALSE);
+      $this->store = new SHMStorage('SHMFileCacheBackend', FALSE, intval($GLOBALS['smc-memsize-default'] ?? 128));
     } catch (\Exception $e) {
       // Error
       unset($this->store);
@@ -43,7 +43,7 @@ class SHMFileCacheBackend implements FileCacheBackendInterface {
       echo "SMC reset file_cache .\n";
     }
     try {
-      $store = new SHMStorage('SHMFileCacheBackend', FALSE);
+      $store = new SHMStorage('SHMFileCacheBackend', FALSE, intval($GLOBALS['smc-memsize-default'] ?? 128));
       $store->clear_cache(TRUE);
     } catch (\Exception $e) {
     }

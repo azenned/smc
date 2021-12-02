@@ -40,7 +40,7 @@ class SHMBackendFactory implements CacheFactoryInterface {
    *   The cache tags checksum provider.
    */
   public function __construct($root, $site_path, CacheTagsChecksumInterface $checksum_provider) {
-    $this->sitePrefix = Settings::getApcuPrefix('apcu_backend', $root, $site_path);
+    $this->sitePrefix = Settings::getApcuPrefix('shm_backend', $root, $site_path);
     $this->checksumProvider = $checksum_provider;
     if (function_exists('shm_attach')) {
       $this->backendClass = 'Blueflame\Drupal\SHMBackend';
