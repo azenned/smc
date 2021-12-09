@@ -1,9 +1,7 @@
 <?php
-if (!defined('SMC_DEBUG')) {
-  define('SMC_DEBUG', FALSE);
-}
+defaults('SMC_DEBUG', FALSE);
 
-if (!require __DIR__ . "/requirements.php") {
+if (!require_once __DIR__ . "/requirements.php") {
   return;
 }
 require_once __DIR__ . '/Cache/SHMStorage.php';

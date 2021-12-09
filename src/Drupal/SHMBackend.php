@@ -2,6 +2,7 @@
 
 namespace Blueflame\Drupal;
 
+use Blueflame\Cache\APCuSHM;
 use Blueflame\Cache\SHMStorage;
 use Drupal\Component\Assertion\Inspector;
 use Drupal\Core\Cache\Cache;
@@ -67,7 +68,7 @@ class SHMBackend implements CacheBackendInterface {
     $this->checksumProvider = $checksum_provider;
     $this->binPrefix = $this->sitePrefix . '_' . $this->bin . '_';
     try {
-      $this->store = new SHMStorage($this->bin, FALSE, intval($GLOBALS['smc-memsize-default'] ?? 128));
+      $this->store = APCuSHM::getInstance();
     } catch (\Exception $e) {
       unset($this->store);
     }

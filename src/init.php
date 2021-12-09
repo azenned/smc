@@ -1,15 +1,13 @@
 <?php
-if (!defined('SMC_DEBUG')) {
-  define('SMC_DEBUG', FALSE);
-}
-
 if (extension_loaded('apc') or extension_loaded('apcu')) {
   return;
 }
 
-if (!require __DIR__ . "/requirements.php") {
+if (!require_once __DIR__ . "/requirements.php") {
   return;
 }
+defaults('SMC_DEBUG', FALSE);
+
 
 require_once __DIR__ . '/Cache/SHMStorage.php';
 require_once __DIR__ . '/Cache/APCuSHM.php';
@@ -120,4 +118,10 @@ elseif (function_exists('shm_attach')
     echo "if apc.enable_cli is true.\n";
     echo "Check you php.ini for cli and remove apc(u) extension.\n";
   }
+}
+
+defaults('SMC_DASHBOARD', FALSE);
+if (SMC_DASHBOARD && ($_SERVER['DOCUMENT_URI'] ?? '') === '/smc_stats') {
+  require_once __DIR__ . '/smc_stats.php';
+  exit();
 }

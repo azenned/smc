@@ -32,6 +32,10 @@
       "class": "Blueflame\\Composer\\PluginConfiguration",
       "smc-debug": false,
       "smc-enable-apcu": true,
+      "smc-enable-dashboard": true,
+      "smc-dashboard-restrict-access": true,
+      "smc-dashboard-user": "admin",
+      "smc-dashboard-password": "admin",
       "smc-enable-services": false,
       "smc-memsize-apcu": "128",
       "smc-memsize-default": "128"

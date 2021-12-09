@@ -100,6 +100,12 @@ AUTOLOAD;
     if (isset($extra['smc-debug']) && $extra['smc-debug']) {
       $autoloadFile .= "\nrequire_once __DIR__ . '/azenned/smc/src/debug.php';";
     }
+    if (isset($extra['smc-enable-dashboard']) && $extra['smc-enable-dashboard']) {
+      $autoloadFile .= "\n@define('SMC_DASHBOARD',TRUE);";
+      $autoloadFile .= "\n@define('SMC_DASHBOARD_RESTRICT'," . (bool) ($extra['smc-dashboard-restrict-access'] ?? FALSE) . ");";
+      $autoloadFile .= "\n@define('SMC_DASHBOARD_USER','" . ($extra['smc-dashboard-user'] ?? 'admin') . "');";
+      $autoloadFile .= "\n@define('SMC_DASHBOARD_PASSWORD','" . ($extra['smc-dashboard-password'] ?? 'admin') . "');";
+    }
     if (isset($extra['smc-memsize-apcu']) && $extra['smc-memsize-apcu']) {
       $autoloadFile .= "\n\$GLOBALS['smc-memsize-apcu'] = " . $extra['smc-memsize-apcu'] . ";";
     }

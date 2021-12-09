@@ -2,6 +2,8 @@
 
 namespace Blueflame\Cache;
 
+defaults('SMC_DEBUG', FALSE);
+
 /**
  * Class APCu compatibility layer
  *
@@ -94,6 +96,6 @@ final class APCuSHM extends SHMStorage {
   }
 
   function apcu_sma_info($limited = FALSE) {
-    return $this->getCacheInfo($limited);
+    return $this->getSMAInfo($limited);
   }
 }

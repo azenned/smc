@@ -1,4 +1,10 @@
 <?php
+// "define if not defined"
+function defaults($d, $v) {
+  if (!defined($d)) {
+    define($d, $v);
+  } // or just @define(...)
+}
 
 if (stristr(PHP_OS, 'DAR')) {
   $max = exec("sysctl kern.sysv.shmmax| awk '{ print $2 }'");

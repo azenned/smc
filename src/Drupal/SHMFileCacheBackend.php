@@ -2,6 +2,7 @@
 
 namespace Blueflame\Drupal;
 
+use Blueflame\Cache\APCuSHM;
 use Blueflame\Cache\SHMStorage;
 use Drupal\Component\FileCache\FileCacheBackendInterface;
 
@@ -13,7 +14,7 @@ class SHMFileCacheBackend implements FileCacheBackendInterface {
   /**
    * Bin used for storing the data in the shared memory.
    *
-   * @var string
+   * @var APCuSHM
    */
   private $store;
 
@@ -24,11 +25,11 @@ class SHMFileCacheBackend implements FileCacheBackendInterface {
    *   (optional) Configuration used to configure this object.
    */
   public function __construct($configuration) {
-    if (!require __DIR__ . "/../requirements.php") {
+    if (!require_once __DIR__ . "/../requirements.php") {
       return;
     }
     try {
-      $this->store = new SHMStorage('SHMFileCacheBackend', FALSE, intval($GLOBALS['smc-memsize-default'] ?? 128));
+      $this->store = APCuSHM::getInstance(); // new SHMStorage('SHMFileCacheBackend', FALSE, intval($GLOBALS['smc-memsize-default'] ?? 128));
     } catch (\Exception $e) {
       // Error
       unset($this->store);
@@ -36,7 +37,7 @@ class SHMFileCacheBackend implements FileCacheBackendInterface {
   }
 
   public static function reset() {
-    if (!require __DIR__ . "/../requirements.php") {
+    if (!require_once __DIR__ . "/../requirements.php") {
       return;
     }
     if (php_sapi_name() == "cli") {
@@ -45,6 +46,7 @@ class SHMFileCacheBackend implements FileCacheBackendInterface {
     try {
       $store = new SHMStorage('SHMFileCacheBackend', FALSE, intval($GLOBALS['smc-memsize-default'] ?? 128));
       $store->clear_cache(TRUE);
+      APCuSHM::getInstance()->clear_cache(TRUE);
     } catch (\Exception $e) {
     }
   }

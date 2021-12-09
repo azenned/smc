@@ -14,7 +14,7 @@ class SHMChainedFastBackendFactory extends ChainedFastBackendFactory {
       $cache_settings = isset($settings) ? $settings->get('cache') : [];
       $consistent_service_name = isset($cache_settings['default']) ? $cache_settings['default'] : 'cache.backend.database';
     }
-    if (!isset($fast_service_name) && function_exists('shm_attach')) {
+    if (FALSE && !isset($fast_service_name) && function_exists('shm_attach')) {
       $fast_service_name = 'cache.backend.shm';
     }
     elseif (!isset($fast_service_name) && function_exists('apcu_fetch')) {
